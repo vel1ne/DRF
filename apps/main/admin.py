@@ -4,7 +4,7 @@ from .models import Category, Post
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
-    list_display = ('name', 'slug', 'post_count', 'created_at')
+    list_display = ('name', 'slug', 'posts_count', 'created_at')
     list_filter = ('created_at',)
     search_fields = ('name', 'description')
     prepopulated_fields = {'slug': ('name',)}
@@ -21,7 +21,7 @@ class PostAdmin(admin.ModelAdmin):
         'title', 'author', 'category', 'status',
         'views_count', 'comments_count', 'created_at'
     )
-    list_filter = ('status', 'category', 'created_at', 'updated-at')
+    list_filter = ('status', 'category', 'created_at', 'updated_at')
     search_fields = ('title', 'content', 'author__username')
     prepopulated_fields = {'slug': ('title',)}
     readonly_fields = ('created_at', 'updated_at', 'views_count')

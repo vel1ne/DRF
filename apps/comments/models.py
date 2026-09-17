@@ -10,7 +10,7 @@ class Comment(models.Model):
         related_name='comments'
     )
     author = models.ForeignKey(
-        settings.AUTH_USER,
+        settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name='comments'
     )
@@ -32,9 +32,9 @@ class Comment(models.Model):
         verbose_name_plural = 'Comments'
         ordering = ['-created_at']
         indexes = [
-            models.Index(fields=['post', '-creatted_at']),
-            models.Index(fields=['author', '-creatted_at']),
-            models.Index(fields=['parent', '-creatted_at']),
+            models.Index(fields=['post', '-created_at']),
+            models.Index(fields=['author', '-created_at']),
+            models.Index(fields=['parent', '-created_at']),
         ]
 
     def __str__(self):

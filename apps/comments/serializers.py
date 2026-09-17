@@ -42,10 +42,15 @@ class CommentCreateSerializer(serializers.ModelSerializer):
         return value
 
     def validate_parent(self, value):
-        if value and value.post != self.initial_data.get('post'):
-            raise serializers.ValidationError(
-                'Parent comment must belong to the same post.'
-            )
+        if value:
+            # Полуаем пост из валидированных данных или из initial_data
+            post_data = self.initial_data.get('post')
+            if post_data:
+                # Сравниваем ID поста родительского комментария с переданным ID
+                if value.post.id != int(post_data):
+                    raise serializers.ValidationError(
+                        'Parent comment must belong to the same post.'
+                    )
         return value
 
     def create(self, validated_data):

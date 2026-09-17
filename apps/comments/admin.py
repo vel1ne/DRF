@@ -10,7 +10,7 @@ class CommentAdmin(admin.ModelAdmin):
     )
     list_filter = ('is_active', 'created_at', 'updated_at')
     search_fields = ('content', 'author__username', 'post__title')
-    readonly_fields = ('content', 'author__username')
+    readonly_fields = ('content', 'author')
     raw_id_fields = ('author', 'post', 'parent')
     list_editable = ('is_active',)
 

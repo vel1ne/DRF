@@ -35,6 +35,7 @@ THIRD_PATY_APPS = [
 LOCAL_APPS = [
     'apps.accounts',
     'apps.main',
+    'apps.comments',
 ]
 
 # Общий список

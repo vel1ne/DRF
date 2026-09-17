@@ -18,7 +18,7 @@ class Category(models.Model):
         ordering = ['name']
 
     def __str__(self):
-        return self.verbose_name
+        return self.name
 
     def save(self, *args, **kwargs):
         if not self.slug:
@@ -70,12 +70,12 @@ class Post(models.Model):
             models.Index(fields=['author', '-created_at']),
         ]
 
-        def __str__(self):
-            return self.title
+    def __str__(self):
+        return self.title
 
     def save(self, *args, **kwargs):
         if not self.slug:
-            self.slug = slugify(self.name)
+            self.slug = slugify(self.title)
         super().save(*args, **kwargs)
 
     def get_absolute_url(self):
@@ -89,4 +89,4 @@ class Post(models.Model):
     def increment_views(self):
         """Увеличивает счетик просмотров"""
         self.views_count += 1
-        self.save(updated_fields=['views_count'])
+        self.save(update_fields=['views_count'])

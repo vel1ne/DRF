@@ -5,18 +5,24 @@ from .models import Category, Post
 
 
 class CategorySerializer(serializers.ModelSerializer):
-    """Сериализатор для категорий"""
-    post_count = serializers.SerializerMethodField()
+    """Сериализатор для категорий."""
+
+    posts_count = serializers.SerializerMethodField()
 
     class Meta:
         model = Category
         fields = [
-            'id', 'name', 'slug', 'description', 'posts_count', 'created_at'
+            'id',
+            'name',
+            'slug',
+            'description',
+            'posts_count',
+            'created_at',
         ]
-        read_only_fields = ['slug', 'created_at']
+        read_only_fields = ['slug', 'created_at', 'posts_count']
 
     def get_posts_count(self, obj):
-        return obj.post.filter(status='published').count()
+        return obj.posts.filter(status='published').count()
 
     def create(self, validated_data):
         validated_data['slug'] = slugify(validated_data['name'])
@@ -24,7 +30,8 @@ class CategorySerializer(serializers.ModelSerializer):
 
 
 class PostListserializer(serializers.ModelSerializer):
-    """Сериализатор для списка постов"""
+    """Сериализатор для списка постов."""
+
     author = serializers.StringRelatedField()
     category = serializers.StringRelatedField()
     comments_count = serializers.ReadOnlyField()
@@ -32,22 +39,33 @@ class PostListserializer(serializers.ModelSerializer):
     class Meta:
         model = Post
         fields = [
-            'id', 'title', 'slug', 'content', 'image', 'category',
-            'author', 'status', 'created_at', 'updated_at',
-            'vies_count', 'comments_count'
+            'id',
+            'title',
+            'slug',
+            'content',
+            'image',
+            'category',
+            'author',
+            'status',
+            'created_at',
+            'updated_at',
+            'views_count',
+            'comments_count',
         ]
         read_only_fields = ['slug', 'author', 'views_count']
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        # обрезаем контент для списка
+
         if len(data['content']) > 200:
-            data['content'] = data['content'][:200] = '...'
+            data['content'] = data['content'][:200] + '...'
+
         return data
 
 
 class PostDetailSerializer(serializers.ModelSerializer):
-    """"Сериализатор для детального просмотра поста"""
+    """Сериализатор для детального просмотра поста."""
+
     author_info = serializers.SerializerMethodField()
     category_info = serializers.SerializerMethodField()
     comments_count = serializers.ReadOnlyField()
@@ -55,19 +73,31 @@ class PostDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Post
         fields = [
-            'id', 'title', 'slug', 'content', 'image', 'category',
-            'category_info', 'author', 'author_info', 'status',
-            'created_at', 'updated_at', 'vies_count', 'comments_count'
+            'id',
+            'title',
+            'slug',
+            'content',
+            'image',
+            'category',
+            'category_info',
+            'author',
+            'author_info',
+            'status',
+            'created_at',
+            'updated_at',
+            'views_count',
+            'comments_count',
         ]
         read_only_fields = ['slug', 'author', 'views_count']
 
-    def  get_author_info(self, obj):
+    def get_author_info(self, obj):
         author = obj.author
+
         return {
             'id': author.id,
             'username': author.username,
-            'full_name': author.full_name,
-            'avatar': author.avatar.url if author.avatar else None
+            'full_name': author.get_full_name(),
+            'avatar': author.avatar.url if author.avatar else None,
         }
 
     def get_category_info(self, obj):
@@ -76,24 +106,32 @@ class PostDetailSerializer(serializers.ModelSerializer):
                 'id': obj.category.id,
                 'name': obj.category.name,
                 'slug': obj.category.slug,
-
             }
+
         return None
 
 
 class PostCreateUpdateSerializer(serializers.ModelSerializer):
-    """Сериализатор для создания и обновления постов"""
+    """Сериализатор для создания и обновления постов."""
 
     class Meta:
         model = Post
-        fields = ['title', 'content', 'image', 'category' 'status']
+        fields = [
+            'title',
+            'content',
+            'image',
+            'category',
+            'status',
+        ]
 
     def create(self, validated_data):
         validated_data['author'] = self.context['request'].user
         validated_data['slug'] = slugify(validated_data['title'])
+
         return super().create(validated_data)
 
     def update(self, instance, validated_data):
         if 'title' in validated_data:
             validated_data['slug'] = slugify(validated_data['title'])
+
         return super().update(instance, validated_data)

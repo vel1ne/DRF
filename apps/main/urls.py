@@ -13,7 +13,7 @@ urlpatterns = [
         views.CategoryDetailView.as_view(),
         name='category-detail'
     ),
-    path('categories/<slug: category_slug>/posts',
+    path('categories/<slug:category_slug>/posts',
          views.post_by_category,
          name='post-by-category'),
 
@@ -22,5 +22,5 @@ urlpatterns = [
     path('my-post/', views.MyPostView.as_view(), name='my-posts'),
     path('popular/', views.popular_posts, name='popular-posts'),
     path('recent/', views.recent_posts, name='recent-posts'),
-    path('<slug: slug>/', views.PostDetailView.as_view(), name='post-detail'),
+    path('<slug:slug>/', views.PostDetailView.as_view(), name='post-detail'),
 ]

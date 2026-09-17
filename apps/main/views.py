@@ -1,4 +1,4 @@
-from rest_framework import status, generics, permissions, filters
+from rest_framework import generics, permissions, filters
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
@@ -18,7 +18,7 @@ from .permissions import IsAuthorOrReadOnly
 
 class CategoryListCreateView(generics.ListCreateAPIView):
     """API endpoint для категорий"""
-    queryset = Category.objects.all
+    queryset = Category.objects.all()
     serializer_class = CategorySerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
@@ -29,7 +29,7 @@ class CategoryListCreateView(generics.ListCreateAPIView):
 
 class CategoryDetailView(generics.RetrieveUpdateDestroyAPIView):
     """API endpoint для конкретной категории"""
-    queryset = Category.objects.all
+    queryset = Category.objects.all()
     serializer_class = CategorySerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
     lookup_field = 'slug'
@@ -39,7 +39,7 @@ class PostListCreateView(generics.ListCreateAPIView):
     """API endpoint для постов"""
     serializer_class = PostListserializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
-    filter_backends  = [
+    filter_backends = [
         DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter
     ]
     filterset_fields = ['title', 'content']
@@ -82,7 +82,7 @@ class PostDetailView(generics.RetrieveUpdateDestroyAPIView):
         instance = self.get_object()
 
         if request.method == 'GET':
-            instance.increments_views()
+            instance.increment_views()
 
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
@@ -98,7 +98,7 @@ class MyPostView(generics.ListAPIView):
         filters.OrderingFilter
     ]
     filterset_fields = ['category', 'status']
-    search_fields = ['title' 'content']
+    search_fields = ['title', 'content']
     ordering_fields = ['created_at', 'updated_at', 'views_count', 'title']
     ordering = ['created_at']
 

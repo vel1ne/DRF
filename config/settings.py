@@ -36,6 +36,8 @@ LOCAL_APPS = [
     'apps.accounts',
     'apps.main',
     'apps.comments',
+    'apps.subscribe',
+    'apps.payment',
 ]
 
 # Общий список

@@ -13,7 +13,6 @@ from .models import (
 )
 from .serializers import (
     SubscriptionPlanSerializer,
-    SubscriptionCreateSerializer,
     SubscriptionHistorySerializer,
     SubscriptionSerializer,
     PinnedPostSerializer,

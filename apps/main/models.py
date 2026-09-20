@@ -26,8 +26,36 @@ class Category(models.Model):
         super().save(*args, **kwargs)
 
 
+class PostManager(models.Manager):
+    """Менеджер для модели Post с дополнительнцми методами"""
+
+    def published(self):
+        return self.filter(status='published')
+
+    def pinned_posts(self):
+        """Возвращает закрепленные посты в порядке закрепления"""
+        return self.filter(
+            pin_info__isnull=False,
+            pin_info__user__subscription__status='active',
+            pin_info__user__subscription__end_date__gt=models.functions.Now(),
+            status='published'
+        ).select_related(
+            'pin_info', 'pin_info__user', 'pin_info__user_subscription'
+        ).order_by('pin_info__pinned_at')
+
+    def regular_posts(self):
+        """Возвращает обычные (незакреплённые) посты"""
+        return self.filter(pin_info__isnull=True, status='published')
+
+    def with_subscription_info(self):
+        """Добавляет информацию о подписке автора"""
+        return self.select_related(
+            'author', 'author__subscription', 'category'
+        ).prefetch_related('pin_info')
+
+
 class Post(models.Model):
-    """Модель поста блога."""
+    """Модель поста блога с поддержкой закрепления."""
     STATUS_CHOICES = [
         ('draft', 'Draft'),
         ('published', 'Published'),
@@ -58,6 +86,8 @@ class Post(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     views_count = models.PositiveBigIntegerField(default=0)
 
+    objects = PostManager()
+
     class Meta:
         db_table = 'posts'
         verbose_name = 'Post'
@@ -86,7 +116,58 @@ class Post(models.Model):
         """Количество комментариев к посту."""
         return self.comments.filter(is_active=True).count()
 
+    @property
+    def is_pinned(self):
+        """проверяет, закреплён ли пост"""
+        return hasattr(self, 'pin_info') and self.pin_info is not None
+
+    @property
+    def can_be_pinned_by_user(self):
+        """проверяет, можно ли закрепить этот пост"""
+        # Это свойство не должно принимать параметры
+        # Логика проверки должна быть вынесена в отдельный метод
+
+        # Пост должен быть опубликован
+        if self.status != 'published':
+            return False
+
+        return True
+
+    def can_be_pinned_by(self, user):
+        """Проверяет, может ли пользователь закрепить этот пост"""
+        if not user or not user.is_authenticated:
+            return False
+
+        # Пост должен принадлежать пользователю
+        if self.author != user:
+            return False
+
+        # Пост должен быть опубликован
+        if self.status != 'published':
+            return False
+
+        # У пользователя должна быть актвная подписка
+        if not hasattr(user, 'subscription') or not user.subscription.is_active:
+            return False
+
+        return True
+
     def increment_views(self):
         """Увеличивает счетик просмотров"""
         self.views_count += 1
         self.save(update_fields=['views_count'])
+
+    def get_pinned_info(self):
+        """Возвращает информацию о закрепление поста"""
+        if self.is_pinned:
+            return {
+                'is_pinned': True,
+                'pinned_at': self.pin_info.pinned_at,
+                'pinned_by': {
+                    'id': self.pin_info.user.id,
+                    'username': self.pin_info.user.username,
+                    'has_active_subscription':
+                    self.pin_info.user.subscription.is_active
+                }
+            }
+        return {'is_pinned': False}

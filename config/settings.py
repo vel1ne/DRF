@@ -1,19 +1,14 @@
-import os
 from pathlib import Path
 from decouple import config
 
-# Базовая директория проекта
-BASE_DIR = Path(__file__).resolve().parent.parent
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
-# Секретный ключ для безопаности
 SECRET_KEY = config('SECRET_KEY')
-
-# Режим отладки
 DEBUG = config('DEBUG', default=False, cast=bool)
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'domen.com', 'www.domen.com']
 
-# Список встроенных Django приложений
+# Application definition
 DJANGO_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -23,15 +18,13 @@ DJANGO_APPS = [
     'django.contrib.staticfiles',
 ]
 
-# Список сторонних приложений
-THIRD_PATY_APPS = [
+THIRD_PARTY_APPS = [
     'rest_framework',
     'corsheaders',
     'django_filters',
     'rest_framework_simplejwt',
 ]
 
-# Список локальных приложений
 LOCAL_APPS = [
     'apps.accounts',
     'apps.main',
@@ -40,10 +33,8 @@ LOCAL_APPS = [
     'apps.payment',
 ]
 
-# Общий список
-INSTALLED_APPS = DJANGO_APPS + THIRD_PATY_APPS + LOCAL_APPS
+INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 
-# Список middleware для обработки запросов
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
@@ -55,17 +46,16 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-# Корневой URL файл проекта
 ROOT_URLCONF = 'config.urls'
 
-# Конфигурация шаблонов Django
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
+                'django.template.context_processors.debug',
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
@@ -76,20 +66,18 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'config.wsgi.application'
 
-# Конфигурация БД
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': config('POSTGRES_DB', default='modelhub'),
-        'USER': config('POSTGRES_USER', default='postgres'),
-        'PASSWORD': config('POSTGRES_PASSWORD', default='password'),
+        'NAME': config('POSTGRES_DB'),
+        'USER': config('POSTGRES_USER'),
+        'PASSWORD': config('POSTGRES_PASSWORD'),
         'HOST': config('POSTGRES_HOST', default='localhost'),
         'PORT': config('POSTGRES_PORT', default='5432'),
-        'ATOMIC_REQUESTS': True,
     }
 }
 
-# Валидаторы паролей
+# Password validation
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -105,51 +93,73 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-# Настройка интернациональности
+# Internationalization
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_TZ = True
 
-# Настройка статических файлов
-STATIC_URL = 'static/' # URL статики
-STATIC_ROOT = BASE_DIR / config('STATIC_ROOT', default='staticfiles') # Путь для собранных файлов статики
+# Static files (CSS, JavaScript, Images)
+STATIC_URL = '/static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
+# Additional locations of static files (только если директория существует)
+STATICFILES_DIRS = []
+
+# Проверяем, существует ли директория static в проекте
+if (BASE_DIR / 'static').exists():
+    STATICFILES_DIRS.append(BASE_DIR / 'static')
+
+# Static files finders
+STATICFILES_FINDERS = [
+    'django.contrib.staticfiles.finders.FileSystemFinder',
+    'django.contrib.staticfiles.finders.AppDirectoriesFinder',
+]
+
+# Media files
 MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / config('MEDIA_ROOT', default='media')
+MEDIA_ROOT = BASE_DIR / 'media'
 
+# Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# Custom User Model
 AUTH_USER_MODEL = 'accounts.User'
 
-# Настройки Django REST Framework
+# REST Framework Configuration
 REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ],
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.AllowAny',  # Разрешить доступ всем
+        'rest_framework.permissions.IsAuthenticated',
     ],
-    'DEFAULT_THROTTLE_CLASSES': [
-        'rest_framework.throttling.AnonRateThrottle',  # Ограничение запросов для анонимных пользователей
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 20,
+    'DEFAULT_FILTER_BACKENDS': [
+        'django_filters.rest_framework.DjangoFilterBackend',
+        'rest_framework.filters.SearchFilter',
+        'rest_framework.filters.OrderingFilter',
     ],
-    'DEFAULT_THROTTLE_RATES': {
-        'anon': '100/hour',  # Лимит запросов для анонимных пользователей
-    },
     'DEFAULT_RENDERER_CLASSES': [
-        'rest_framework.renderers.JSONRenderer',  # Рендеринг в JSON
+        'rest_framework.renderers.JSONRenderer',
     ],
     'DEFAULT_PARSER_CLASSES': [
-        'rest_framework.parsers.JSONParser',  # Парсинг JSON-данных
+        'rest_framework.parsers.JSONParser',
+        'rest_framework.parsers.MultiPartParser',
+        'rest_framework.parsers.FormParser',
     ],
 }
 
-# Настройка CORS для разработки и продакшена
-if DEBUG:
-    CORS_ALLOW_ALL_ORIGINS = True
-else:
-    CORS_ALLOWED_ORIGINS = [ # Разрешенные источники
-        'http://localhost:5173',
-        'http://127.0.0.1:5173',
-    ]
+# CORS Configuration
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",  # Укажите порт, на котором работает ваш Vue.js
+    "http://127.0.0.1:5173",
+    "https://domen.com",
+    "https://www.domen.com",
+]
 
+# JWT Configuration
 from datetime import timedelta
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
@@ -161,32 +171,62 @@ SIMPLE_JWT = {
     'SIGNING_KEY': SECRET_KEY,
     'VERIFYING_KEY': None,
     'AUTH_HEADER_TYPES': ('Bearer',),
-    'AUTH_HEADER_NAME': 'HTTP-AUTHORIZATION',
+    'AUTH_HEADER_NAME': 'HTTP_AUTHORIZATION',
     'USER_ID_FIELD': 'id',
     'USER_ID_CLAIM': 'user_id',
 }
 
-# Настройки безопасности
-SECURE_BROWSER_XSS_FILTER = True  # Защита от XSS-атак
-SECURE_CONTENT_TYPE_NOSNIFF = True  # Запрет MIME-типов
-X_FRAME_OPTIONS = 'DENY'  # Защита от кликджекинга
+# Security Settings
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+X_FRAME_OPTIONS = 'DENY'
 
-# Настройки логирования
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'handlers': {
-        'file': {
-            'level': 'INFO',  # Уровень логирования
-            'class': 'logging.FileHandler',  # Логирование в файл
-            'filename': BASE_DIR / 'debug.log',  # Путь к файлу логов
-        },
+
+# URL фронтенда для редиректов
+FRONTEND_URL = config('FRONTEND_URL', default='http://localhost:5173')
+
+# Stripe настройки
+STRIPE_PUBLISHABLE_KEY = config('STRIPE_PUBLISHABLE_KEY', default='')
+STRIPE_SECRET_KEY = config('STRIPE_SECRET_KEY', default='')
+STRIPE_WEBHOOK_SECRET = config('STRIPE_WEBHOOK_SECRET', default='')
+
+# Email настройки (для уведомлений)
+EMAIL_BACKEND = config('EMAIL_BACKEND', default='django.core.mail.backends.console.EmailBackend')
+EMAIL_HOST = config('EMAIL_HOST', default='localhost')
+EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
+EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
+EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
+DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='noreply@newssite.com')
+
+# Celery настройки (опционально)
+CELERY_BROKER_URL = config('CELERY_BROKER_URL', default='redis://localhost:6379/0')
+CELERY_RESULT_BACKEND = config('CELERY_RESULT_BACKEND', default='redis://localhost:6379/0')
+CELERY_TIMEZONE = TIME_ZONE
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_ACCEPT_CONTENT = ['json']
+
+# Celery Beat настройки для периодических задач
+CELERY_BEAT_SCHEDULE = {
+    'check-expired-subscriptions': {
+        'task': 'apps.subscribe.tasks.check_expired_subscriptions',
+        'schedule': 3600.0,  # Каждый час
     },
-    'loggers': {
-        'django': {
-            'handlers': ['file'],  # Используемый обработчик
-            'level': 'INFO',  # Уровень логирования
-            'propagate': True,  # Передача логов родительским логгерам
-        },
+    'send-subscription-expiry-reminders': {
+        'task': 'apps.subscribe.tasks.send_subscription_expiry_reminder',
+        'schedule': 86400.0,  # Каждый день
+    },
+    'cleanup-old-payments': {
+        'task': 'apps.payment.tasks.cleanup_old_payments',
+        'schedule': 604800.0,  # Каждую неделю
+    },
+    'cleanup-old-webhook-events': {
+        'task': 'apps.payment.tasks.cleanup_old_webhook_events',
+        'schedule': 86400.0,  # Каждый день
+    },
+    'retry-failed-webhook-events': {
+        'task': 'apps.payment.tasks.retry_failed_webhook_events',
+        'schedule': 3600.0,  # Каждый час
     },
 }

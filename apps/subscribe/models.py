@@ -141,7 +141,7 @@ class PinnedPost(models.Model):
         indexes = [
             models.Index(fields=['pinned_at']),
         ]
-    
+
     def __str__(self):
         return f'{self.user.username} pinned: {self.post.title}'
 

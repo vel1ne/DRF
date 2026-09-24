@@ -12,7 +12,7 @@ from .models import (
 class SubscriptionPlanAdmin(admin.ModelAdmin):
     list_display = (
         'name', 'price', 'duration_days', 'is_active',
-        'subscription_count', 'created_at'
+        'subscriptions_count', 'created_at'
     )
     list_filter = ('is_active', 'created_at')
     search_fields = ('name', 'stripe_price_id')
@@ -58,7 +58,7 @@ class SubscriptionHistoryInLine(admin.TabularInline):
 class SubscriptionAdmin(admin.ModelAdmin):
     list_display = (
         'user_link', 'plan', 'status', 'is_active_display',
-        'days_remaning_display', 'start_date', 'end_date'
+        'days_remaining_display', 'start_date', 'end_date'
     )
     list_filter = ('status', 'plan', 'auto_renew', 'created_at')
     search_fields = ('user__username', 'user__email', 'plan__name')
@@ -181,7 +181,7 @@ class PinnedPostAdmin(admin.ModelAdmin):
         """Ссылка на пользователя"""
         url = reverse('admin:accounts_user_change', args=[obj.user.pk])
         return format_html('<a href="{}">{}</a>', url, obj.user.username)
-    user_link.short.description = 'User'
+    user_link.short_description = 'User'
 
     def post_link(self, obj):
         """Ссфлка на пост"""
